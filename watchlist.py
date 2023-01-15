@@ -12,6 +12,8 @@ CGREEN  = '\33[32m'
 CYELLOW = '\33[33m'
 CBLUE   = '\33[34m'
 ENDC = '\033[0m'
+WHITE = '\033[37m'
+RESET = '\033[39m'
 
 
 def printSpaced(strings, spacing):
@@ -30,7 +32,7 @@ def printSpacedColored(strings, spacing, color):
 	for i in range(0,len(strings)):
 		strings[i]=str(strings[i])
 		strings[i] = (strings[i][:spacing-3] + '..') if len(strings[i]) > spacing-1 else strings[i]
-		leftover=spacing-len(strings[i])
+		leftover=int(spacing-len(strings[i]))
 		line=line+strings[i]+' '*leftover	
 	print(color+line+ENDC)
 
@@ -40,7 +42,7 @@ def printSpacedRightAligned(strings, spacing):
 	for i in range(0,len(strings)):
 		strings[i]=str(strings[i])
 		strings[i] = (strings[i][:spacing-3] + '..') if len(strings[i]) > spacing-1 else strings[i]
-		leftover=spacing-len(strings[i])
+		leftover=int(spacing-len(strings[i]))
 		line=line+' '*leftover+strings[i]	
 	print(line)
 
@@ -48,7 +50,41 @@ def printSpacedRightAligned(strings, spacing):
 # tickers = ['AAPL', 'GOOGL', 'INTC']
 # tickerDataFetcher = yf.Ticker(tickers)
 # company=tickerDataFetcher.info
+nOfDisplayCols = 5
+SHOW_PE = False
+SHOW_DIV = False
+VERTICAL = False
 
+USAGE = 'Usage: "python3 watchlist.py <tsv or csv file>"'
+if len(sys.argv) < 2:
+	print('-pe\tshow pe ratio')
+	print('-div\tshow dividend info')
+	print('-all\tshow all info')
+	print('-v\tlist info for each stock vertical instead of horizontal')
+	print('-h\tprint this message')
+	print(USAGE)
+	exit()
+if '-h' in sys.argv or '--help' in sys.argv:
+	print('-pe\tshow pe ratio')
+	print('-div\tshow dividend info')
+	print('-all\tshow all info')
+	print('-v\tlist info for each stock vertical instead of horizontal')
+	print('-h\tprint this message')
+	print(USAGE)
+	exit()
+if '-pe' in sys.argv:
+	SHOW_PE = True
+	nOfDisplayCols = nOfDisplayCols+1
+if '-div' in sys.argv:
+	SHOW_DIV = True
+	nOfDisplayCols = nOfDisplayCols+2
+if '-all' in sys.argv:
+	SHOW_PE = True
+	SHOW_DIV = True
+	nOfDisplayCols = 8
+if '-v' in sys.argv:
+	VERTICAL = True
+spacing = int(80/nOfDisplayCols)
 csvFile = sys.argv[1]
 csvTickerCol = 0
 csvIntrinsicCol = 1
@@ -85,9 +121,18 @@ tickers = yf.Tickers(watchlist_symbols)
 # for tkr in tickers.tickers:
 # 	print(tkr.info['shortName'])
 # 	print(tkr.info['regularMarketPrice'])
-spacing=24
+#spacing=24
 i = 0
-printSpaced(['Company','Ticker','Price','Intrinsic Value', 'Margin of Safety','Forward PE', 'Dividend Yield', 'Payout Ratio'], spacing)
+
+displayCols = ['Company','Ticker','Price','IntrVal', 'MOS']
+if SHOW_PE:
+    displayCols = displayCols + ['FwdPE']
+if SHOW_DIV:
+    displayCols = displayCols + ['DivYld', 'PayoutR']
+#displayCols = ['Company','Ticker','Price','Intrinsic Value', 'Margin of Safety']
+#printSpaced(['Company','Ticker','Price','Intrinsic Value', 'Margin of Safety','Forward PE', 'Dividend Yield', 'Payout Ratio'], spacing)
+printSpaced(displayCols, spacing)
+
 for symbol in watchlist_symbols:
     info=tickers.tickers[symbol].info
     price=info['regularMarketPrice']  #round(prices[i]['Close'][day],2)
@@ -98,12 +143,24 @@ for symbol in watchlist_symbols:
     div=info['dividendYield']
     payout=info['payoutRatio']
     #current=info['currentRatio']
+
+    #get color
+    color = RESET
     if MOS >= -5 and MOS < 10:
-        printSpaced([info['shortName'],symbol,info['regularMarketPrice'],intrinsic,MOS,fwPe, div, payout], spacing)
+        color = RESET
     elif MOS >= 10:
-        printSpacedColored([info['shortName'],symbol,info['regularMarketPrice'],intrinsic,MOS,fwPe, div, payout], spacing,CGREEN)
+        color = CGREEN
     else:
-        printSpacedColored([info['shortName'],symbol,info['regularMarketPrice'],intrinsic,MOS,fwPe, div, payout], spacing,CRED)
+        color = CRED
+
+    displayFields = [info['shortName'],symbol,info['regularMarketPrice'],intrinsic,MOS]
+    if SHOW_PE:
+        displayFields = displayFields + [fwPe]
+    if SHOW_DIV:
+        displayFields = displayFields + [div, payout]
+    printSpacedColored(displayFields, spacing,color)
+
+#        printSpacedColored([info['shortName'],symbol,info['regularMarketPrice'],intrinsic,MOS,fwPe, div, payout], spacing,color)
     # print(info['shortName'])
     # print(info['regularMarketPrice'])
     # print(info['currency'])
