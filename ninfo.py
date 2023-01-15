@@ -3,6 +3,10 @@ import yfinance as yf
 import pandas as pd
 import os
 pd.options.display.float_format = '{:.2f}'.format #Suppress scientific notation of numbers
+# NOTE: Leaving a bunch of dead code in here for examples (how to use the API)
+# NOTE: This only handles stocks currently
+# NOTE: Yeah, this code is horribly messy and unorganized. It's fine how it is, for now. Keep it simple, messy, and straight up imperative until otherwise necessary
+# NOTE: It's also not very pythonic and I don't care.
 
 # make tools calculate:
 # ROCE (Operating Income / Capital Employed)
@@ -43,12 +47,18 @@ pd.options.display.float_format = '{:.2f}'.format #Suppress scientific notation 
 # Shareholders Equity
 # Fully Diluted Shares
 # Effective Tax Rate? *Not a must
-
-COMPACT = False
+CHART = False
+COMPACT = True
 ticker = sys.argv[1]
-
+if '-d' in sys.argv or '--detailed' in sys.argv:
+    COMPACT = False
+if '--chart' in sys.argv:
+    CHART = True
+if '-h' in sys.argv or '--help' in sys.argv:
+    print('-d\tdisplay detailed view')
+    print('--chart\tdisplay ascii chart *WIP, does not account for stock splits, etc.')
+    exit()
 tickerDataFetcher = yf.Ticker(ticker)
-print(tickerDataFetcher.info)
 company=tickerDataFetcher.info
 #print(company.info)
 #print(company.calendar)
@@ -69,6 +79,12 @@ payout_ratio=company['payoutRatio']
 book_val=company['bookValue']
 forward_eps=company['forwardEps']
 trailing_eps=company['trailingEps']
+forward_pe=0
+trailing_pe=0
+if forward_eps is not None:
+    forward_pe=float(price)/float(forward_eps)
+if trailing_eps is not None:
+    trailing_pe=float(price)/float(trailing_eps)
 long_business_summary=company['longBusinessSummary']
 if COMPACT: long_business_summary=(long_business_summary[:360] + '..') if len(long_business_summary) > 360 else long_business_summary
 debt_to_equity=company['debtToEquity']
@@ -102,98 +118,99 @@ def printSpacedRightAligned(strings, spacing):
 # COMPANY NAME, CHART
 col_spacing=20
 printSpaced([name, company['industry']],32)
-#priceData=tickerDataFetcher.history(period="max",frequency="monthly")
-priceData=tickerDataFetcher.history(period="max")
-maxPrice=0
-minPrice=999999999999999999999999999
-
-width=int(os.get_terminal_size().columns-9)#120
-#if COMPACT: width=80-7
-height=int(os.get_terminal_size().lines/2)
-#if COMPACT: height=12
-
-#print(priceData)
-priceArray=[]
-datesArray=[]
-for val in priceData['Close']:
-	priceArray.append(val)
-
-for date, row in priceData.iterrows():
-	datesArray.append(date)
-
-tradingDays=252
-numOfYearsToChart=5
-if COMPACT: numOfYearsToChart=5
-yearLen=(tradingDays/width)
-skipDays=int(yearLen*numOfYearsToChart) #120*15/365 = 5y
-counter=0
-width_scaled=int((width*(skipDays)))
-
-print(round(width_scaled/tradingDays,1),' Year Chart:')
-
-for y in range(height,-1, -1):
-	priceRange=0
-	scaleMulti=0
-	starti = (len(priceArray))-width_scaled
-	for g in range(starti,starti+width_scaled):
-		#print(len(priceArray))
-		#print(g)
-		if priceArray[g] > maxPrice:
-			maxPrice=priceArray[g]
-		if priceArray[g] < minPrice:
-			minPrice=priceArray[g]
-		#print('Min price',minPrice)
-		#print('Max price',maxPrice)
-		priceRange=maxPrice-minPrice
-	for x in range(0,width_scaled):
-		counter=counter+1
-		if counter >= skipDays:
-			c = ' '
-			scaleMulti=height/priceRange
-			pp = float(priceArray[starti+x]-minPrice)*scaleMulti
-			if y < pp:
-				c = '#'
-			counter=0
-			print(c,end='')
-	print(' ',round((y*(priceRange/height)+minPrice),2))
-
-
-
-#'2022-10'
-skip_chars=7
-skip_step=7
-spacing=7
-space_counter=0
-counter=0
-starti = (len(priceArray))-width_scaled
-
-#print dates
-for x in range(0,width_scaled):
-	counter=counter+1
-	if counter >= skipDays:
-		# print('X',end='')
-		string = ' '
-		skip_step = skip_step+1
-		if space_counter >= spacing and skip_step >= skip_chars:
-			string=str(datesArray[starti+x])
-			print(string[0:7],end='')
-			skip_step = 0
-			space_counter = 0
-		elif skip_step >= skip_chars:
-			space_counter=space_counter+1
-			print(' ',end='')
-		# if space_counter >= spacing:
-		# 	print('-',end='')
-		# 	#space_counter=0
-		counter=0
-
-print()
-if not COMPACT: print()
+if CHART:
+    #priceData=tickerDataFetcher.history(period="max",frequency="monthly")
+    priceData=tickerDataFetcher.history(period="max")
+    maxPrice=0
+    minPrice=999999999999999999999999999
+    
+    width=int(os.get_terminal_size().columns-9)#120
+    #if COMPACT: width=80-7
+    height=int(os.get_terminal_size().lines/2)
+    #if COMPACT: height=12
+    
+    #print(priceData)
+    priceArray=[]
+    datesArray=[]
+    for val in priceData['Close']:
+    	priceArray.append(val)
+    
+    for date, row in priceData.iterrows():
+    	datesArray.append(date)
+    
+    tradingDays=252
+    numOfYearsToChart=5
+    if COMPACT: numOfYearsToChart=5
+    yearLen=(tradingDays/width)
+    skipDays=int(yearLen*numOfYearsToChart) #120*15/365 = 5y
+    counter=0
+    width_scaled=int((width*(skipDays)))
+    
+    print(round(width_scaled/tradingDays,1),' Year Chart:')
+    
+    for y in range(height,-1, -1):
+    	priceRange=0
+    	scaleMulti=0
+    	starti = (len(priceArray))-width_scaled
+    	for g in range(starti,starti+width_scaled):
+    		#print(len(priceArray))
+    		#print(g)
+    		if priceArray[g] > maxPrice:
+    			maxPrice=priceArray[g]
+    		if priceArray[g] < minPrice:
+    			minPrice=priceArray[g]
+    		#print('Min price',minPrice)
+    		#print('Max price',maxPrice)
+    		priceRange=maxPrice-minPrice
+    	for x in range(0,width_scaled):
+    		counter=counter+1
+    		if counter >= skipDays:
+    			c = ' '
+    			scaleMulti=height/priceRange
+    			pp = float(priceArray[starti+x]-minPrice)*scaleMulti
+    			if y < pp:
+    				c = '#'
+    			counter=0
+    			print(c,end='')
+    	print(' ',round((y*(priceRange/height)+minPrice),2))
+    
+    
+    
+    #'2022-10'
+    skip_chars=7
+    skip_step=7
+    spacing=7
+    space_counter=0
+    counter=0
+    starti = (len(priceArray))-width_scaled
+    
+    #print dates
+    for x in range(0,width_scaled):
+    	counter=counter+1
+    	if counter >= skipDays:
+    		# print('X',end='')
+    		string = ' '
+    		skip_step = skip_step+1
+    		if space_counter >= spacing and skip_step >= skip_chars:
+    			string=str(datesArray[starti+x])
+    			print(string[0:7],end='')
+    			skip_step = 0
+    			space_counter = 0
+    		elif skip_step >= skip_chars:
+    			space_counter=space_counter+1
+    			print(' ',end='')
+    		# if space_counter >= spacing:
+    		# 	print('-',end='')
+    		# 	#space_counter=0
+    		counter=0
+    
+    print()
+    if not COMPACT: print()
 print(long_business_summary)
 if not COMPACT: print()
 printSpaced(['Current Price',price,currency],col_spacing)
-printSpaced(['Forward EPS', forward_eps,'Forward PE',price/forward_eps],col_spacing)
-printSpaced(['Trailing EPS', trailing_eps, 'Trailing PE',price/trailing_eps],col_spacing)
+printSpaced(['Forward EPS', forward_eps,'Forward PE',forward_pe],col_spacing)
+printSpaced(['Trailing EPS', trailing_eps, 'Trailing PE',trailing_pe],col_spacing)
 printSpaced(['Dividend Yield', str(dividend_yield), 'Dividend Payout Ratio', str(payout_ratio)],col_spacing)
 #printSpaced(['Dividend Payout Ratio', str(payout_ratio)],col_spacing)
 if not COMPACT: print()
