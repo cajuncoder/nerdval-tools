@@ -1,3 +1,4 @@
+pip3 install yfinance
 
 ### add-to-bashrc.sh
 Add these python commands to your .bashrc environment on linux/unix-type environments to make them more convenient to use.

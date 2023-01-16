@@ -4,3 +4,4 @@ echo "alias nquote='python3 "$PWD"/nquote.py'" >> ~/.bashrc
 echo "alias ninfo='python3 "$PWD"/ninfo.py'" >> ~/.bashrc 
 echo "alias pv='python3 "$PWD"/pv.py'" >> ~/.bashrc 
 echo "alias dcf='python3 "$PWD"/dcf.py'" >> ~/.bashrc 
+echo "alias cagr='python3 "$PWD"/cagr.py'" >> ~/.bashrc 
