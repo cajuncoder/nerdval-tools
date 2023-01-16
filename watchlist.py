@@ -1,5 +1,5 @@
-#watchlist2.py
-
+#TODO: Add --vertical option implementation
+#TODO: Allow configuration of default watchlist in ~/.watchlist file? 
 import sys
 import yfinance as yf
 import pandas as pd
@@ -50,6 +50,7 @@ def printSpacedRightAligned(strings, spacing):
 # tickers = ['AAPL', 'GOOGL', 'INTC']
 # tickerDataFetcher = yf.Ticker(tickers)
 # company=tickerDataFetcher.info
+terminalWidth = 80
 nOfDisplayCols = 5
 SHOW_PE = False
 SHOW_DIV = False
@@ -60,14 +61,17 @@ if len(sys.argv) < 2:
 	print('-pe\tshow pe ratio')
 	print('-div\tshow dividend info')
 	print('-all\tshow all info')
+	print('-width\tset terminal width')
 	print('-v\tlist info for each stock vertical instead of horizontal')
 	print('-h\tprint this message')
+
 	print(USAGE)
 	exit()
 if '-h' in sys.argv or '--help' in sys.argv:
 	print('-pe\tshow pe ratio')
 	print('-div\tshow dividend info')
 	print('-all\tshow all info')
+	print('-width\tset terminal width')
 	print('-v\tlist info for each stock vertical instead of horizontal')
 	print('-h\tprint this message')
 	print(USAGE)
@@ -84,7 +88,9 @@ if '-all' in sys.argv:
 	nOfDisplayCols = 8
 if '-v' in sys.argv:
 	VERTICAL = True
-spacing = int(80/nOfDisplayCols)
+if '-width' in sys.argv:
+	terminalWidth = int(sys.argv[sys.argv.index('-width')+1])
+spacing = int(terminalWidth/nOfDisplayCols)
 csvFile = sys.argv[1]
 csvTickerCol = 0
 csvIntrinsicCol = 1

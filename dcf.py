@@ -11,11 +11,19 @@ terminalPE = float(input("Terminal Multiple: "));
 undiscountedPrices=[]
 
 i = 0
+thisPeriodFcf = fcf
 while i < years:
-    //dostuff
+    undiscountedPrices = undiscountedPrices+thisPeriodFcf
+    thisPeriodFcf=thisPeriodFcf+(thisPeriodFcf*growth)
 
+
+discountedPrices=[]
+result=0
 i = 0
 while i < years:
-    //discount to present
-
-print('Work in progress')
+    #discount to present
+    pv = undiscountedPrices[i]/(1 + rate)**i
+    discountedPrices=discountedPrices+pv
+    result=result+pv
+result=result+(terminalPE/(1+rate)**years)
+print(result)
