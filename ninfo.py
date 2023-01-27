@@ -69,9 +69,9 @@ company=tickerDataFetcher.info
 #print(company.financials) #cashflow statement
 #print(company.financials)
 name=company['shortName']
-currency=company['currency']
+currency='?'#company['currency']
 shares=company['sharesOutstanding']
-price=company['regularMarketPrice']
+price=company['ask']
 current_ratio=company['currentRatio']
 dividend_rate=company['dividendRate']
 dividend_yield=company['dividendYield']

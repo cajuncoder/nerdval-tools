@@ -16,10 +16,12 @@ if('-n' in sys.argv):
 if('-c' in sys.argv):
     SHOW_CURRENCY = True
 tickerDataFetcher = yf.Ticker(ticker)
-company=tickerDataFetcher.info
-name=company['shortName']
+#use "fast_info" instead of "info" now.
+company=tickerDataFetcher.fast_info
+#print(company) #<---debugging when API breaks
+name=ticker#company['shortName']
 currency=company['currency']
-price=company['regularMarketPrice']
+price=round(float(company['last_price']),2)
 if SHOW_NAME:
     print(name)
 if not SHOW_CURRENCY:
