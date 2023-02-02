@@ -55,21 +55,25 @@ nOfDisplayCols = 4
 SHOW_PE = False
 SHOW_DIV = False
 VERTICAL = False
+GET_INFO = False
+CHEAP_ONLY = False
 csvFile = ''
 
 USAGE = 'Usage: "python3 watchlist.py <tsv or csv file>"'
-if len(sys.argv) < 2:
-    if os.path.isfile('.nwatch'):
-        f = open('.nwatch','r')
+if len(sys.argv) < 2 or sys.argv[1].startswith('--'):
+    if os.path.isfile(os.path.expanduser('~/.nwatch')):
+        f = open(os.path.expanduser('~/.nwatch'),'r')
         csvFile=f.readline().strip()
         f.close()
     else:
-	    print('-pe\tshow pe ratio')
-	    print('-div\tshow dividend info')
-	    print('-all\tshow all info')
-	    print('-width\tset terminal width')
-	    print('-v\tlist info for each stock vertical instead of horizontal')
-	    print('-h\tprint this message')
+	    print('--pe\tshow pe ratio [broken]')
+	    print('--div\tshow dividend info [broken]')
+	    print('--all\tshow all info [broken]')
+	    print('--cheap-only\tshow only stocks near or below intrinsic value')
+	    print('--get-info\tshow company info [requires "ninfo.py" to be in path]')
+	    print('--width\tset terminal width')
+	    print('--vertical\tlist info for each stock vertical instead of horizontal')
+	    print('--help\tprint this message')
 
 	    print(USAGE)
 	    exit()
@@ -79,9 +83,13 @@ if '-h' in sys.argv or '--help' in sys.argv:
 	print('-h\tprint this message')
 	print(USAGE)
 	exit()
-if '-v' in sys.argv:
+if '--cheap-only' in sys.argv:
+    CHEAP_ONLY = True
+if '--get-info' in sys.argv:
+    GET_INFO = True
+if '--vertical' in sys.argv:
 	VERTICAL = True
-if '-width' in sys.argv:
+if '--width' in sys.argv:
 	terminalWidth = int(sys.argv[sys.argv.index('-width')+1])
 spacing = int(terminalWidth/nOfDisplayCols)
 if not csvFile:
@@ -133,17 +141,26 @@ for symbol in watchlist_symbols:
     intrinsic=watchlist_intrinsic_vals[i]
     MOSamt=round(float(intrinsic)-float(price),2)
     MOS=round(MOSamt/price*100,0)
+    IS_CHEAP = False
 
     #get color
     color = RESET
-    if MOS >= -5 and MOS < 10:
+    if MOS >= -5 and MOS < 0:
         color = RESET
-    elif MOS >= 10:
+    elif MOS >= 0:
         color = CGREEN
+        IS_CHEAP = True
     else:
         color = CRED
-
-    displayFields = [symbol,price,intrinsic,MOS]
-    printSpacedColored(displayFields, spacing,color)
+    if IS_CHEAP and CHEAP_ONLY:
+        displayFields = [symbol,price,intrinsic,MOS]
+        printSpacedColored(displayFields, spacing,color)
+        if GET_INFO:
+            os.system('python3 '+os.path.dirname(__file__)+'/ninfo.py '+symbol)
+    elif not CHEAP_ONLY:
+        displayFields = [symbol,price,intrinsic,MOS]
+        printSpacedColored(displayFields, spacing,color)
+        if GET_INFO:
+            os.system('python3 '+os.path.dirname(__file__)+'/ninfo.py '+symbol)
 
     i=i+1
