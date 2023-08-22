@@ -140,7 +140,7 @@ for symbol in watchlist_symbols:
     price=round(info['last_price'],2)
     intrinsic=watchlist_intrinsic_vals[i]
     MOSamt=round(float(intrinsic)-float(price),2)
-    MOS=round(MOSamt/price*100,0)
+    MOS=round(100.0-(float(price)/float(intrinsic))*100,0)
     IS_CHEAP = False
 
     #get color
